@@ -60,7 +60,7 @@
   (defvar *io-contexts-mutex* (bt:make-lock))
   (defvar *io-contexts* (tg:make-weak-hash-table :test #'eql :weakness :value))
   (defvar *fmt-contexts-mutex* (bt:make-lock))
-  (defvar *fmt-contexts* (tg:make-weak-pointer :test #'eql :weakness :value))
+  (defvar *fmt-contexts* (tg:make-weak-hash-table :test #'eql :weakness :value))
   (defun get-io-ctx (addr)
     (bt:with-lock-held (*io-contexts-mutex*)
       (gethash addr *io-contexts*)))

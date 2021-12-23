@@ -116,6 +116,8 @@
   (sample-aspect-ratio rational "Sample aspect ratio" t)
   (disposition keyword "Stream disposition" t)
   (time-base rational "Stream time base" t)
+  (duration int64 "Stream duration" t)
+  (start-time int64 "Stream start time" t)
   (avg-frame-rate rational "Stream average frame rate" t))
 
 (defun media-stream-codecpar (media-stream)

@@ -191,6 +191,9 @@
   (ctx :pointer)
   (dict :pointer))
 
+(defcfun (avformat-version "avformat_version" :library libavformat)
+    :unsigned-int)
+
 (defcallback format-interrupt-callback :boolean ((opaque :pointer))
   (let ((ctx (get-fmt-ctx (pointer-address opaque))))
     (when ctx
@@ -371,12 +374,28 @@
       (error 'out-of-memory))
     (%media-stream p ctx)))
 
+;; alanr: According to https://javadoc.io/doc/org.bytedeco/ffmpeg/latest/index-all.html the parameters for avformat_find_stream_info are:
+
+;;    ic - media file handle
+;;    options - If non-NULL, an ic.nb_streams long array of pointers to dictionaries, where i-th member contains options for codec corresponding to i-th stream. On return each dictionary will be filled with options that were not found.
+
+;; This was passing pointer to a null pointer and crashing. Most calls pass a null pointer.
+;; This side-effects the context to fill in extra information, so we don't need the return values here, I think. 
+;; This can be validated by calling dump-format, which without calling this succeeds, but doesn't have values for duration and bit rate.
+;; After calling this it does 
 (defun find-stream-info (ctx &optional options)
   (declare (type format-context ctx)
            (type list options))
-  (with-dict (dict options)
-    (check-rv (avformat-find-stream-info (%format-context-ptr ctx) dict))
-    (from-dict dict)))
+  (check-rv (avformat-find-stream-info (%format-context-ptr ctx) (null-pointer)))
+  )
+
+;; Crashes
+;; (defun find-stream-info (ctx &optional options)
+;;   (declare (type format-context ctx)
+;;            (type list options))
+;;   (with-dict (dict options)
+;;     (check-rv (avformat-find-stream-info (%format-context-ptr ctx) dict))
+;;     (from-dict dict)))
 
 (defun dump-format (ctx &key (index 0) (url ""))
   (declare (type string url)

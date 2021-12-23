@@ -91,7 +91,14 @@
   (defconstant +not-available+ -11)
   (defconstant +out-of-memory+ -12)
   (defconstant +permission-denied+ -13)
-  (defconstant +invalid-argument+ -22))
+  (defconstant +invalid-argument+ -22)
+  ;; See https://github.com/FFmpeg/FFmpeg/blob/131dbb9a7a2dd645c36a85190e2fe0ab987c45cf/libavcodec/avcodec.h#L89
+  ;; AVERROR(EAGAIN) return value means that new input data is required to
+  ;; return new output. In this case, continue with sending input. For each
+  ;; input frame/packet, the codec will typically return 1 output frame/packet,
+  ;; but it can also be 0 or more than 1.
+  (defconstant +try-again+ -35)      
+)
 
 (define-condition bsf-not-found (ffmpeg-error)
   ()
@@ -157,6 +164,10 @@
   ()
   (:default-initargs :code +invalid-argument+))
 
+(define-condition try-again (ffmpeg-error)
+  ()
+  (:default-initargs :code +try-again+))
+
 (defmacro check-rv (code)
   (with-gensyms (rv)
     `(let ((,rv ,code))
@@ -182,6 +193,7 @@
                   (#.+out-of-memory+ 'out-of-memory)
                   (#.+permission-denied+ 'permission-denied)
                   (#.+invalid-argument+ 'invalid-argument)
+                  (#.+try-again+ 'try-again)
                   (T 'ffmpeg-error))
                 :code ,rv))
        ,rv)))
