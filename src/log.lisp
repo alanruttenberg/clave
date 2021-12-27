@@ -46,6 +46,10 @@
     :void
   (level log-level))
 
+(defcfun (av-log-get-level "av_log_get_level" :library libavutil)
+    :int
+  )
+
 (defcfun (av-log-set-callback "av_log_set_callback" :library libavutil)
     :void
   (callback :pointer))
@@ -78,6 +82,24 @@
 (defun set-log-level (level)
   (declare (type keyword level))
   (av-log-set-level level))
+
+(defun get-log-level ()
+  (declare (type keyword level))
+  (or (car (find (av-log-get-level)
+                 '((:quiet -8)
+                   (:panic 0)
+                   (:fatal 8)
+                   (:error 16)
+                   (:warning 24)
+                   (:info 32)
+                   (:verbose 40)
+                   (:debug 48)
+                   (:trace 56))
+                 :key 'second
+                 :test 'eql))
+      (av-log-get-level)
+      ))
+             
 
 (defun restore-log-callback ()
   (setf *log-callback* nil)
